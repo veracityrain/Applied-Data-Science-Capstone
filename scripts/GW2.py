@@ -25,8 +25,10 @@ df_itemname = pd.DataFrame(data=itemname_rows,columns=itemname_columns)
 df_TP = df_itemname.join(df_item,lsuffix='_caller', rsuffix='_other')
 
 df_TP.drop(columns=['id_caller','id_other'],inplace=True)
+df_TP['SellAfterTax'] = df_TP['sell']*0.85
 df_TP['FullStackBuy'] = df_TP['buy']*250
 df_TP['FullStackSell'] = df_TP['sell']*250
+df_TP['FullStackSellAfterTax'] = df_TP['sell']*0.85*250
 
 df_Leg = df_TP.loc[df_TP['ItemName'].isin(['The Bifrost','Bolt','The Dreamer','The Flameseeker Prophecies',
 'Frenzy','Frostfang','Howler','Incinerator','The Juggernaut','Kudzu','Kraitkin',"Kamohoali'i Kotaki",'Meteorlogicus', 'The Minstrel',
