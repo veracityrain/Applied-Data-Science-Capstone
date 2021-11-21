@@ -1,0 +1,129 @@
+---
+title: "MyFirstRmd"
+author: "Shaun"
+date: "11/5/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## NYPD Shooting Project
+
+This document contains the analysis of NYPD Shooting Data taken from <https://catalog.data.gov/dataset>
+The data contains crime incidents that occured in New York from 2016 to end of 2021, with information on Location (Boro, Latitude, Longitude, Location_Desc) as well as the descriptive detail of the incident such as Victim and Suspect Profile.
+
+Analysis will be done on the Boro to understand the distribution of the crime as well as trying to identify trend in crime using the historical data.
+
+
+
+# Importing
+```{r Importing, echo=TRUE}
+library(tidyverse)
+library(lubridate)
+url <- "https://data.cityofnewyork.us/api/views/833y-fsy8/rows.csv?accessType=DOWNLOAD"
+nypd_shooting <- read_csv(url)
+
+spec(nypd_shooting)
+```
+
+# Tidying
+```{r tidying, echo=TRUE}
+nypd_shooting <- nypd_shooting %>%
+  select(INCIDENT_KEY, OCCUR_DATE, BORO, STATISTICAL_MURDER_FLAG, PERP_AGE_GROUP, PERP_SEX, PERP_RACE, VIC_AGE_GROUP, VIC_SEX, VIC_RACE) %>%
+  mutate(OCCUR_DATE  = mdy(OCCUR_DATE ))
+```
+
+
+
+
+```{r Data, echo=TRUE}
+summary(nypd_shooting)
+
+
+
+summary(is.na(nypd_shooting))
+```
+
+
+```{r grouping, echo=TRUE}
+OCCUR_DATE_summary <- nypd_shooting %>%
+  count(OCCUR_DATE)
+
+BORO_summary <- nypd_shooting %>%
+  count(BORO)
+
+VIC_RACE_summary <- nypd_shooting %>%
+  count(VIC_RACE)
+
+```
+
+
+
+# Analysis & Visualisation
+```{r boro_summary, echo=TRUE}
+OCCUR_DATE_summary
+
+BORO_summary
+
+VIC_RACE_summary
+```
+
+```{r group_date_to_month, echo=TRUE}
+OCCUR_DATE_summary <- OCCUR_DATE_summary %>%
+  group_by(month=floor_date(OCCUR_DATE, "month")) %>%
+  summarize(n = sum(n))
+```
+
+
+
+
+
+
+```{r visualisation, echo=TRUE}
+OCCUR_DATE_summary %>%
+  ggplot( aes(x = month, y = n)) + 
+  geom_line(aes(color = "n")) +
+  ggtitle("Monthly Crime Trend") 
+```
+
+
+
+
+
+
+```{r test, echo=FALSE}
+ggplot(BORO_summary, aes(x = BORO, y = n)) + geom_bar(stat="identity")  +
+  ggtitle("Crime per Boro") 
+```
+
+```{r brooklyn, echo = TRUE}
+nypd_shooting$Brooklyn <- ifelse(nypd_shooting$BORO == 'BROOKLYN',1,0)
+
+nypd_shooting
+```
+
+
+```{r model, echo=TRUE}
+mod.boro = lm(Brooklyn~PERP_RACE+PERP_AGE_GROUP, data = nypd_shooting)
+summary(mod.boro)
+```
+
+
+```{r session, echo=TRUE}
+sessionInfo()
+```
+
+
+# Summary
+Brooklyn had the highest crime rate, followed by Bronx, then Queens. Crime rate in New York has been decreasing gradually until the significant 3 month spike in June 2020.
+
+There was no statistically significant finding on Boro and Murder flag, which show potential bias on my personal assumption that there will be a high correlation of murder from more dangerous boro.
+
+There was however statistal significantly on Brooklyn in regards to perpetrator's age and race.
+
+
+
